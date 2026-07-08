@@ -5,16 +5,28 @@ phases:
     runtime-versions:
       java: corretto8
 
+  pre_build:
+    commands:
+      - echo "Setting up SSH key"
+      - mkdir -p ~/.ssh
+      - echo "$EC2_SSH_KEY" > ~/.ssh/ec2_key.pem
+      - chmod 400 ~/.ssh/ec2_key.pem
+      - ssh-keyscan -H $EC2_HOST >> ~/.ssh/known_hosts
+
   build:
     commands:
       - echo Build started on `date`
-      - mvn clean install
+      - mvn clean package
 
   post_build:
     commands:
       - echo Build completed on `date`
-      - echo Packaging artifacts...
-      - mvn package
+      - echo Deploying WAR to EC2
+      - scp -i ~/.ssh/ec2_key.pem target/*.war ec2-user@$EC2_HOST:/home/ec2-user/nextwork-web-project.war
+      - ssh -i ~/.ssh/ec2_key.pem ec2-user@$EC2_HOST "sudo systemctl stop tomcat || true"
+      - ssh -i ~/.ssh/ec2_key.pem ec2-user@$EC2_HOST "sudo cp /home/ec2-user/nextwork-web-project.war /usr/share/tomcat/webapps/nextwork-web-project.war"
+      - ssh -i ~/.ssh/ec2_key.pem ec2-user@$EC2_HOST "sudo systemctl start tomcat"
+      - ssh -i ~/.ssh/ec2_key.pem ec2-user@$EC2_HOST "sudo systemctl restart httpd"
 
 artifacts:
   files:
