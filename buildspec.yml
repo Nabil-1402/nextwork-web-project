@@ -21,6 +21,8 @@ phases:
   post_build:
     commands:
       - echo Build completed on `date`
+      - echo Testing SSH connection
+      - ssh -vvv -i ~/.ssh/ec2_key.pem -o StrictHostKeyChecking=no ec2-user@$EC2_HOST "echo SSH connected"
       - echo Deploying WAR to EC2
       - scp -i ~/.ssh/ec2_key.pem target/*.war ec2-user@$EC2_HOST:/home/ec2-user/nextwork-web-project.war
       - ssh -i ~/.ssh/ec2_key.pem ec2-user@$EC2_HOST "sudo systemctl stop tomcat || true"
