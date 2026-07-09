@@ -11,7 +11,7 @@ phases:
       - mkdir -p ~/.ssh
       - echo "$EC2_SSH_KEY" > ~/.ssh/ec2_key.pem
       - chmod 400 ~/.ssh/ec2_key.pem
-      - ssh-keyscan -H $EC2_HOST >> ~/.ssh/known_hosts
+      - ssh-keyscan -T 10 -H "$EC2_HOST" >> ~/.ssh/known_hosts
 
   build:
     commands:
